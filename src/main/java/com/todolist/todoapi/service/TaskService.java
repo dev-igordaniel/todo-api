@@ -83,7 +83,7 @@ public class TaskService {
 
         //busca a task garantindo que ela pertence ao usuário logado
         Task task = taskRepository.findByIdAndUserId(id, user.getId())
-                .orElseThrow(() -> new RuntimeException("Task não encontrada")));
+                .orElseThrow(() -> new RuntimeException("Task não encontrada"));
 
         task.setTitle(dto.getTitle());
         task.setDescription(dto.getDescription());
