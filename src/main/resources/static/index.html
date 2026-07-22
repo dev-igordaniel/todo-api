@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>To-Do API</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* ── AUTH ── */
+    #auth-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .auth-box {
+      background: #1a1d27;
+      border: 1px solid #2d3148;
+      border-radius: 12px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .auth-box h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      color: #fff;
+    }
+
+    .auth-box p {
+      font-size: 0.875rem;
+      color: #64748b;
+      margin-bottom: 2rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 0.5rem;
+      background: transparent;
+      border: 1px solid #2d3148;
+      border-radius: 8px;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: #6366f1;
+      border-color: #6366f1;
+      color: #fff;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-bottom: 0.4rem;
+      margin-top: 1rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    input:focus { border-color: #6366f1; }
+
+    .btn {
+      width: 100%;
+      padding: 0.7rem;
+      margin-top: 1.5rem;
+      background: #6366f1;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn:hover { background: #4f46e5; }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #2d3148;
+      color: #94a3b8;
+      margin-top: 0.5rem;
+    }
+
+    .btn-outline:hover { border-color: #6366f1; color: #6366f1; background: transparent; }
+
+    .error-msg {
+      margin-top: 1rem;
+      padding: 0.65rem 0.9rem;
+      background: #2d1b1b;
+      border: 1px solid #7f1d1d;
+      border-radius: 8px;
+      color: #fca5a5;
+      font-size: 0.85rem;
+      display: none;
+    }
+
+    /* ── APP ── */
+    #app-screen { display: none; }
+
+    header {
+      background: #1a1d27;
+      border-bottom: 1px solid #2d3148;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h2 { font-size: 1.1rem; font-weight: 600; color: #fff; }
+    header span { font-size: 0.8rem; color: #64748b; }
+
+    .logout-btn {
+      background: transparent;
+      border: 1px solid #2d3148;
+      color: #94a3b8;
+      padding: 0.4rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+
+    .logout-btn:hover { border-color: #ef4444; color: #ef4444; }
+
+    main {
+      max-width: 720px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .create-box {
+      background: #1a1d27;
+      border: 1px solid #2d3148;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .create-box h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 1rem;
+    }
+
+    .row {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .row input { flex: 1; margin-top: 0; }
+
+    .btn-create {
+      width: auto;
+      padding: 0.65rem 1.2rem;
+      margin-top: 0;
+      white-space: nowrap;
+    }
+
+    .filters {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .filter-btn {
+      padding: 0.4rem 0.9rem;
+      background: transparent;
+      border: 1px solid #2d3148;
+      border-radius: 20px;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+
+    .filter-btn.active {
+      background: #6366f1;
+      border-color: #6366f1;
+      color: #fff;
+    }
+
+    .task-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .task-card {
+      background: #1a1d27;
+      border: 1px solid #2d3148;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: border 0.2s;
+    }
+
+    .task-card:hover { border-color: #3d4268; }
+
+    .task-check {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #2d3148;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .task-check.done {
+      background: #22c55e;
+      border-color: #22c55e;
+    }
+
+    .task-check.done::after {
+      content: '✓';
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .task-info { flex: 1; }
+
+    .task-title {
+      font-size: 0.95rem;
+      color: #e2e8f0;
+      font-weight: 500;
+    }
+
+    .task-title.done { text-decoration: line-through; color: #475569; }
+
+    .task-desc {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 0.2rem;
+    }
+
+    .task-status {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .task-status.PENDING { background: #1e293b; color: #94a3b8; }
+    .task-status.DONE { background: #14532d; color: #86efac; }
+
+    .task-delete {
+      background: transparent;
+      border: none;
+      color: #475569;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.25rem;
+      transition: color 0.2s;
+    }
+
+    .task-delete:hover { color: #ef4444; }
+
+    .empty {
+      text-align: center;
+      padding: 3rem;
+      color: #475569;
+      font-size: 0.9rem;
+    }
+
+    .loading { color: #475569; font-size: 0.85rem; text-align: center; padding: 2rem; }
+  </style>
+</head>
+<body>
+
+<!-- ── AUTH ── -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <h1>To-Do API</h1>
+    <p>Gerencie suas tarefas com autenticação JWT</p>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('login')">Entrar</button>
+      <button class="tab" onclick="showTab('register')">Criar conta</button>
+    </div>
+
+    <!-- Login -->
+    <div id="login-form">
+      <label>Username</label>
+      <input type="text" id="login-username" placeholder="seu username" />
+      <label>Senha</label>
+      <input type="password" id="login-password" placeholder="sua senha" />
+      <button class="btn" onclick="login()">Entrar</button>
+    </div>
+
+    <!-- Register -->
+    <div id="register-form" style="display:none">
+      <label>Username</label>
+      <input type="text" id="reg-username" placeholder="seu username" />
+      <label>Nome completo</label>
+      <input type="text" id="reg-fullname" placeholder="seu nome" />
+      <label>Email</label>
+      <input type="email" id="reg-email" placeholder="seu@email.com" />
+      <label>Senha</label>
+      <input type="password" id="reg-password" placeholder="mínimo 6 caracteres" />
+      <button class="btn" onclick="register()">Criar conta</button>
+    </div>
+
+    <div class="error-msg" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app-screen">
+  <header>
+    <div>
+      <h2>Minhas Tarefas</h2>
+      <span id="header-user"></span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sair</button>
+  </header>
+
+  <main>
+    <!-- Criar task -->
+    <div class="create-box">
+      <h3>Nova tarefa</h3>
+      <label>Título</label>
+      <div class="row">
+        <input type="text" id="new-title" placeholder="O que precisa ser feito?" />
+        <button class="btn btn-create" onclick="createTask()">Adicionar</button>
+      </div>
+      <label>Descrição (opcional)</label>
+      <input type="text" id="new-desc" placeholder="Detalhes da tarefa..." />
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters">
+      <button class="filter-btn active" onclick="filterTasks('ALL', this)">Todas</button>
+      <button class="filter-btn" onclick="filterTasks('PENDING', this)">Pendentes</button>
+      <button class="filter-btn" onclick="filterTasks('DONE', this)">Concluídas</button>
+    </div>
+
+    <!-- Lista -->
+    <div class="task-list" id="task-list">
+      <div class="loading">Carregando tarefas...</div>
+    </div>
+  </main>
+</div>
+
+<script>
+  const API = 'http://localhost:8080';
+  let token = null;
+
+  // ── TABS ──
+  function showTab(tab) {
+    document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+    });
+    hideError();
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('auth-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function hideError() {
+    document.getElementById('auth-error').style.display = 'none';
+  }
+
+  // ── AUTH ──
+  async function login() {
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+      if (!res.ok) return showError(data.message || 'Credenciais inválidas');
+
+      token = data.token;
+      document.getElementById('header-user').textContent = `Olá, ${data.fullName}`;
+      showApp();
+    } catch (e) {
+      showError('Erro ao conectar com a API');
+    }
+  }
+
+  async function register() {
+    const body = {
+      username: document.getElementById('reg-username').value,
+      fullName: document.getElementById('reg-fullname').value,
+      email: document.getElementById('reg-email').value,
+      password: document.getElementById('reg-password').value,
+    };
+
+    try {
+      const res = await fetch(`${API}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      const data = await res.json();
+      if (!res.ok) return showError(data.message || 'Erro ao criar conta');
+
+      token = data.token;
+      document.getElementById('header-user').textContent = `Olá, ${data.fullName}`;
+      showApp();
+    } catch (e) {
+      showError('Erro ao conectar com a API');
+    }
+  }
+
+  function logout() {
+    token = null;
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display = 'none';
+  }
+
+  function showApp() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    loadTasks();
+  }
+
+  // ── TASKS ──
+  async function loadTasks(status = null) {
+    const url = status && status !== 'ALL'
+      ? `${API}/tasks/filter?status=${status}`
+      : `${API}/tasks`;
+
+    try {
+      const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const tasks = await res.json();
+      renderTasks(tasks);
+    } catch (e) {
+      document.getElementById('task-list').innerHTML = '<div class="loading">Erro ao carregar tarefas</div>';
+    }
+  }
+
+  function renderTasks(tasks) {
+    const list = document.getElementById('task-list');
+    if (!tasks.length) {
+      list.innerHTML = '<div class="empty">Nenhuma tarefa encontrada.<br>Adicione uma acima!</div>';
+      return;
+    }
+
+    list.innerHTML = tasks.map(task => `
+      <div class="task-card">
+        <div class="task-check ${task.status === 'DONE' ? 'done' : ''}"
+             onclick="toggleStatus(${task.id}, '${task.status}', '${task.title}', '${task.description || ''}')">
+        </div>
+        <div class="task-info">
+          <div class="task-title ${task.status === 'DONE' ? 'done' : ''}">${task.title}</div>
+          ${task.description ? `<div class="task-desc">${task.description}</div>` : ''}
+        </div>
+        <span class="task-status ${task.status}">${task.status === 'DONE' ? 'Concluída' : 'Pendente'}</span>
+        <button class="task-delete" onclick="deleteTask(${task.id})">✕</button>
+      </div>
+    `).join('');
+  }
+
+  async function createTask() {
+    const title = document.getElementById('new-title').value.trim();
+    const description = document.getElementById('new-desc').value.trim();
+
+    if (!title) return;
+
+    await fetch(`${API}/tasks`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ title, description: description || null, status: 'PENDING' })
+    });
+
+    document.getElementById('new-title').value = '';
+    document.getElementById('new-desc').value = '';
+    loadTasks();
+  }
+
+  async function toggleStatus(id, currentStatus, title, description) {
+    const newStatus = currentStatus === 'DONE' ? 'PENDING' : 'DONE';
+
+    await fetch(`${API}/tasks/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ title, description, status: newStatus })
+    });
+
+    loadTasks();
+  }
+
+  async function deleteTask(id) {
+    await fetch(`${API}/tasks/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    loadTasks();
+  }
+
+  function filterTasks(status, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadTasks(status);
+  }
+</script>
+</body>
+</html>
